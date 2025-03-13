@@ -19,41 +19,20 @@ This is a code formatter tool that helps ensure consistent coding style and dete
 
 ## Project Structure
 
-The following outlines the structure of the code formatter project, detailing the purpose of each file and directory.
-
-* **tools**: Contains all config file of codespell, clang-format, clang-tidy.
-    * **.codespell**
-        * **exclude-file.txt**: Contains lines to be excluded from Codespell checks.
-        * **ignore-words.txt**: Contains words to be ignored by Codespell to avoid false positives.
-    * **uncrustify.cfg**: Configuration file for Uncrustify, specifying the coding style and formatting rules. Base on [Uncrustify Project](https://confluence.silabs.com/display/DEVOPS/Uncrustify+Project)
-    * **.clang-tidy**: Configuration file for clang-tidy, specifying checks and options for static analysis.
-
-* **.pre-commit-config.yaml**: Configuration file for pre-commit, defining the hooks and their settings to be run before commits.
-* **data_format_sample.c**: Sample C source file used for demonstrating the code formatter and static analysis tools.
-* **README.md**: Documentation file providing an overview of the project, setup instructions, and usage guidelines.
+The project is organized as follows:
 
 ## Installation
+
 ### Ubuntu
-Recommended operating system: WSL, Ubuntu 22.04.
-
-Ensure Python3 is installed on your system. Then, install pre-commit clang-format clang-tidy cppcheck by running:
-```
-$ pip install pre-commit
-$ sudo apt install uncrustify clang-tidy cppcheck
-```
-
-Recommended version:
-- Codespell 2.2.4
-- Uncrustify 0.72.0
-- Clang tidy 14.0.0
-- Cppcheck 2.7
 
 ### Windows
 
-TBD
-
+### MacOS
 
 ## Quick start
+
+### Add workflow to you project
+
 
 Copy the folder ```tools```  and file ```.pre-commit-config.yaml``` to your repo.
 

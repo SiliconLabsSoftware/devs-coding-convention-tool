@@ -1,0 +1,48 @@
+name: 00-Check-Code-Convention
+description: :"Code Formatter tool action workflow. It will execute the pre-commit hook and fails the workflow when the tool has findings."
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+
+jobs:
+  check_coding_convention:
+    name: Check coding convention
+    runs-on: ubuntu-24.04
+    steps:
+    # Checkout the repo branch which called this workflow
+    - name: Checkout tool branch
+      uses: actions/checkout@v4.1.7
+    - name: Checkout target branch
+      uses: actions/checkout@v4.1.7
+      with:
+          ref: ${{ inputs.branch }}
+          path: target_repo
+
+    - name: Install necessary tools
+      run: |
+        activate_linux.sh
+    - name: Execute pre-commit hook
+      run: |
+        pre-commit install
+        pre-commit run --all-files 2>&1 | tee CodingConventionTool.txt
+    - name: Upload Result
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: CodingConventionResult
+        path: CodingConventionTool.txt
+        retention-days: 90
+    - name: Evaulate log file
+      run: |
+        keywords=("Failed")
+        for keyword in "${keywords[@]}"; do
+          if grep -q "$keyword" CodingConventionTool.txt; then
+            echo "Keyword '$keyword' found in the file."
+            exit 1
+          else
+            echo "Keyword '$keyword' not found in the file."
+          fi
+        done

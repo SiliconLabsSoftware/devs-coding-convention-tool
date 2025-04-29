@@ -15,7 +15,7 @@ repos:
     rev: v1.3.5
     hooks:
       - id: uncrustify
-        args: [-c, ./tools/uncrustify/uncrustify.cfg, -lC, --no-backup, --replace]
+        args: [-c, ./uncrustify.cfg, -lC, --no-backup, --replace]
       - id: clang-tidy
         args:
           - --config-file=./.clang-tidy

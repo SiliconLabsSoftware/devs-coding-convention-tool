@@ -1,10 +1,3 @@
-![Silabs](https://img.shields.io/badge/CodingConventionTool-1.1-green)
-![Silabs](https://img.shields.io/badge/precommit-2.17.0-green)
-![Silabs](https://img.shields.io/badge/codespell-2.2.4-green)
-![Silabs](https://img.shields.io/badge/uncrustify-0.72.0-green)
-![Silabs](https://img.shields.io/badge/clang_tidy-14.0.0-green)
-![Silabs](https://img.shields.io/badge/cppcheck-2.7-green)
-
 # Coding Convention Tool
 This is a code formatter tool that helps ensure consistent coding style and detects common issues in source code files. It integrates with [pre-commit](https://pre-commit.com/), allowing you to automate code formatting and checks as part of your development workflow.
 

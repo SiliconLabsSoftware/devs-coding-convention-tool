@@ -1,10 +1,3 @@
-![Silabs](https://img.shields.io/badge/CodingConventionTool-1.1-green)
-![Silabs](https://img.shields.io/badge/precommit-2.17.0-green)
-![Silabs](https://img.shields.io/badge/codespell-2.2.4-green)
-![Silabs](https://img.shields.io/badge/uncrustify-0.72.0-green)
-![Silabs](https://img.shields.io/badge/clang_tidy-14.0.0-green)
-![Silabs](https://img.shields.io/badge/cppcheck-2.7-green)
-
 # Coding Convention Tool
 This is a code formatter tool that helps ensure consistent coding style and detects common issues in source code files. It integrates with [pre-commit](https://pre-commit.com/), allowing you to automate code formatting and checks as part of your development workflow.
 
@@ -15,7 +8,6 @@ This is a code formatter tool that helps ensure consistent coding style and dete
 - Identifies and suggests fixes for common spelling errors using [codespell](https://github.com/codespell-project/codespell).
 - Formats code according to specified [Uncrustify](https://github.com/uncrustify/uncrustify) rules base on [Silabs's coding standard](https://github.com/SiliconLabsSoftware/agreements-and-guidelines/blob/main/coding_standard.md)
 - Checks for identifiers naming style mismatch of function, definition, struct, variable using [clang-tidy](https://releases.llvm.org/14.0.0/tools/clang/tools/extra/docs/clang-tidy/index.htmlextensible)
-- Checks code for potential errors and style issues using [cppcheck](https://cppcheck.sourceforge.io/).
 
 ## Project Structure
 
@@ -41,32 +33,11 @@ Recommended version:
 - Codespell 2.2.4
 - Uncrustify 0.64.0 // Silabs specific uncrustify.cfg support only this version
 - Clang tidy 14.0.0
-- Cppcheck 2.7
 
 ### Windows
 
 TBD
 
-
-## Quick start
-
-Copy the folder ```tools```  and file ```.pre-commit-config.yaml``` to your repo.
-
-Run pre-commit install to install pre-commit into your git hooks. pre-commit will now run on every commit:
-
-```$ pre-commit install```
-
-Staging files need formatting. For example:
-
-```$ git add file.c```
-
-Run pre-commit hooks on a repository to check coding convention.
-
-```pre-commit run --all-files```
-
-Or run pre-commit for a file:
-
-```pre-commit run --file ./file.c```
 
 ### Exclude Folder
 

@@ -1,4 +1,4 @@
-exclude: .*/build/.*|.*/gecko_sdk.*/.*|.*/autogen/.*
+exclude: '.*\/build\/.*|.*\/gecko_sdk.*/.*|.*\/autogen\/.*|.*simplicity.*/.*|.*\/config\/.*|.*\.slcp|.*\.slps|.*\.mak'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
@@ -10,12 +10,12 @@ repos:
     rev: v2.2.4
     hooks:
       - id: codespell
-        args: [-w, --config, ./.codespell/.codespellrc]
+        args: [-w, --config, ./.codespell/.codespellrc,"--skip=*.cmake"]
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
       - id: uncrustify
-        args: [-c, ./uncrustify.cfg, -lC, --no-backup, --replace]
+        args: [-c, ./uncrustify/uncrustify.cfg, -lC, --no-backup, --replace]
       - id: clang-tidy
         args:
           - --config-file=./.clang-tidy
@@ -23,12 +23,3 @@ repos:
           - --extra-arg=-I/inc
           - --header-filter:'^((?!test).)*$'
           - -p=./build
-      - id: cppcheck
-        args:
-          [
-            --language=c,
-            --std=c99,
-            --check-config,
-            --suppress=missingInclude,
-            --suppress=unmatchedSuppression,
-          ]

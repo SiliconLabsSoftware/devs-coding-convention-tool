@@ -91,7 +91,7 @@ This is a sample line that should be excluded.
 ### Uncrustify
 
 Automatic source code formatting follows [Silabs's coding standard](https://github.com/SiliconLabsSoftware/agreements-and-guidelines/blob/main/coding_standard.md)
-The Uncrustify configuration file is located at [/tools/uncrustify.cfg](./tools/uncrustify.cfg).
+The Uncrustify configuration file is located at [/tools/uncrustify/uncrustify.cfg](./tools/uncrustify/uncrustify.cfg).
 
 
 ### Clang-Tidy

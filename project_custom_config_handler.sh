@@ -1,31 +1,23 @@
 #!/bin/bash
-echo "This script checks for custom codespell and pre-commit configurations."
 
-# Get the directory of the script
-SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+WORKSPACE_DIR="/src"
+ACTION_DIR="/action"
 
-# Check for ../formatting_config/pre-commit-config.yaml
-if [ -f "$SCRIPT_DIR/../formatting_config/pre-commit-config.yaml" ]; then
-    echo "Custom pre-commit configuration found."
-    cp "$SCRIPT_DIR/../formatting_config/pre-commit-config.yaml" "$SCRIPT_DIR/.pre-commit-config.yaml"
-else
-    echo "No custom pre-commit configuration found."
+CUSTOM_IGNORE_WORDS=${CUSTOM_IGNORE_WORDS:-""}
+CUSTOM_EXCLUDE_FILE=${CUSTOM_EXCLUDE_FILE:-""}
+CUSTOM_PRE_COMMIT_CONFIG=${CUSTOM_PRE_COMMIT_CONFIG:-""}
+
+if [ -n "$CUSTOM_PRE_COMMIT_CONFIG" ] && [ -f "$WORKSPACE_DIR/$CUSTOM_PRE_COMMIT_CONFIG" ]; then
+    echo "Custom pre-commit configuration found at: $CUSTOM_PRE_COMMIT_CONFIG"
+    cp "$WORKSPACE_DIR/$CUSTOM_PRE_COMMIT_CONFIG" "$ACTION_DIR/.pre-commit-config.yaml"
 fi
 
-# Check for ../formatting_config/exclude-file.txt
-if [ -f "$SCRIPT_DIR/../formatting_config/exclude-file.txt" ]; then
-    echo "Custom codespell exclude file found."
-    cp "$SCRIPT_DIR/../formatting_config/exclude-file.txt" "$SCRIPT_DIR/tools/.codespell/exclude-file.txt"
-else
-    echo "No custom codespell exclude file found."
+if [ -n "$CUSTOM_EXCLUDE_FILE" ] && [ -f "$WORKSPACE_DIR/$CUSTOM_EXCLUDE_FILE" ]; then
+    echo "Custom codespell exclude file found at: $CUSTOM_EXCLUDE_FILE"
+    cp "$WORKSPACE_DIR/$CUSTOM_EXCLUDE_FILE" "$ACTION_DIR/tools/.codespell/exclude-file.txt"
 fi
 
-# Check for ../formatting_config/ignore-words.txt
-if [ -f "$SCRIPT_DIR/../formatting_config/ignore-words.txt" ]; then
-    echo "Custom codespell ignore words file found."
-    cp "$SCRIPT_DIR/../formatting_config/ignore-words.txt" "$SCRIPT_DIR/tools/.codespell/ignore-words.txt"
-else
-    echo "No custom codespell ignore words file found."
+if [ -n "$CUSTOM_IGNORE_WORDS" ] && [ -f "$WORKSPACE_DIR/$CUSTOM_IGNORE_WORDS" ]; then
+    echo "Custom codespell ignore words file found at: $CUSTOM_IGNORE_WORDS"
+    cp "$WORKSPACE_DIR/$CUSTOM_IGNORE_WORDS" "$ACTION_DIR/tools/.codespell/ignore-words.txt"
 fi
-
-echo "Custom configuration check completed."

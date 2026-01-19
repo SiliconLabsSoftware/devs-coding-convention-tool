@@ -1,0 +1,66 @@
+name: "Code Convention Check"
+description: "Check code conventions using Docker container"
+
+inputs:
+  custom-exclude-file:
+    description: "Path to custom exclude file (relative to repo root)"
+    required: false
+    default: ""
+
+  custom-ignore-words:
+    description: "Path to custom ignore words file (relative to repo root)"
+    required: false
+    default: ""
+
+  custom-pre-commit-config:
+    description: "Path to custom pre-commit config file (relative to repo root)"
+    required: false
+    default: ""
+
+  runner-type:
+    description: "Runner type (deprecated, now runs in Docker)"
+    required: false
+    default: "auto"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build Code Convention Docker Image
+      shell: bash
+      run: |
+        docker build -t coding-convention-tool:${{ github.sha }} ${{ github.action_path }}
+
+    - name: Run Code Convention Checks
+      shell: bash
+      run: |
+        docker run --rm \
+          --user $(id -u):$(id -g) \
+          -v "${{ github.workspace }}:/src" \
+          -e CUSTOM_EXCLUDE_FILE="${{ inputs.custom-exclude-file }}" \
+          -e CUSTOM_IGNORE_WORDS="${{ inputs.custom-ignore-words }}" \
+          -e CUSTOM_PRE_COMMIT_CONFIG="${{ inputs.custom-pre-commit-config }}" \
+          coding-convention-tool:${{ github.sha }}
+
+    - name: Upload Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: CodingConventionResult
+        path: CodingConventionTool.txt
+        retention-days: 3
+
+    - name: Upload Patch
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-fix.patch
+        path: code-fix.patch
+        retention-days: 3
+
+    - name: Check Results
+      shell: bash
+      run: |
+        if grep -iq "Failed" CodingConventionTool.txt; then
+          echo "Code convention check failed"
+          exit 1
+        fi

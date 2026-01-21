@@ -27,10 +27,6 @@ COPY .pre-commit-config.yaml /action/
 COPY tools /action/tools
 COPY entrypoint.sh /entrypoint.sh
 
-# Fix paths in pre-commit config to point to absolute paths inside the container
-RUN sed -i 's|\./uncrustify/uncrustify.cfg|/action/tools/uncrustify/uncrustify.cfg|g' .pre-commit-config.yaml && \
-    sed -i 's|\./.github/coding-convention-tool/tools/.codespell/.codespellrc|/action/tools/.codespell/.codespellrc|g' .pre-commit-config.yaml && \
-    sed -i 's|\./.clang-tidy|/action/tools/.clang-tidy|g' .pre-commit-config.yaml && \
-    chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]

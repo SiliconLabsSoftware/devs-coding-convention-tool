@@ -50,13 +50,12 @@ git clone https://github.com/SiliconLabsSoftware/devs-coding-convention-tool.git
 docker build -t convention-tool /tmp/convention-tool
 
 # Run checks
-docker run --rm --user $(id -u):$(id -g) -v "$(pwd):/src" convention-tool
+docker run --rm -v "$(pwd):/src" convention-tool
 ```
 
 **With Custom Config:**
 ```bash
 docker run --rm \
-    --user $(id -u):$(id -g) \
     -v "$(pwd):/src" \
     -e CUSTOM_IGNORE_WORDS=".github/formatting_config/ignore-words.txt" \
     -e CUSTOM_EXCLUDE_FILE=".github/formatting_config/exclude-file.txt" \

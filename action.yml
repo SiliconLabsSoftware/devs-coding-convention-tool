@@ -34,7 +34,6 @@ runs:
       shell: bash
       run: |
         docker run --rm \
-          --user $(id -u):$(id -g) \
           -v "${{ github.workspace }}:/src" \
           -e CUSTOM_EXCLUDE_FILE="${{ inputs.custom-exclude-file }}" \
           -e CUSTOM_IGNORE_WORDS="${{ inputs.custom-ignore-words }}" \
@@ -46,7 +45,7 @@ runs:
       if: always()
       with:
         name: CodingConventionResult
-        path: CodingConventionTool.txt
+        path: ${{ github.workspace }}/CodingConventionTool.txt
         retention-days: 3
 
     - name: Upload Patch
@@ -54,13 +53,13 @@ runs:
       if: always()
       with:
         name: code-fix.patch
-        path: code-fix.patch
+        path: ${{ github.workspace }}/code-fix.patch
         retention-days: 3
 
     - name: Check Results
       shell: bash
       run: |
-        if grep -iq "Failed" CodingConventionTool.txt; then
+        if grep -iq "Failed" ${{ github.workspace }}/CodingConventionTool.txt; then
           echo "Code convention check failed"
           exit 1
         fi

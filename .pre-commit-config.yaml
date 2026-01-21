@@ -10,15 +10,22 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
-        args: [-w, --config, ./.github/coding-convention-tool/tools/.codespell/.codespellrc]
+        args: [-w, --config, /action/tools/.codespell/.codespellrc]
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
       - id: uncrustify
-        args: [-c, ./uncrustify/uncrustify.cfg, -lC, --no-backup, --replace]
+        args:
+          [
+            -c,
+            /action/tools/uncrustify/uncrustify.cfg,
+            -lC,
+            --no-backup,
+            --replace,
+          ]
       - id: clang-tidy
         args:
-          - --config-file=./.clang-tidy
+          - --config-file=/action/tools/.clang-tidy
           - --use-color
           - --extra-arg=-I/inc
           - --header-filter:'^((?!test).)*$'

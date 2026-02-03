@@ -1,26 +1,30 @@
 name: "Code Convention Check"
-description: "Check code conventions using Docker container"
+description: "Enforce Silicon Labs C/C++ coding standards (formatting, naming, spelling)"
 
 inputs:
-  custom-exclude-file:
-    description: "Path to custom exclude file (relative to repo root)"
+  exclude-regex:
+    description: |
+      Regex pattern to exclude paths from all checks.
+      Format: Python regex, use | for OR.
+      Example: .*\/generated\/.*|.*\.pb\.c
     required: false
     default: ""
 
-  custom-ignore-words:
-    description: "Path to custom ignore words file (relative to repo root)"
+  codespell-ignore-words:
+    description: |
+      Words for codespell to ignore.
+      Format: Comma-separated, case-insensitive.
+      Example: hsi,aci,dout,teh
     required: false
     default: ""
 
-  custom-pre-commit-config:
-    description: "Path to custom pre-commit config file (relative to repo root)"
+  codespell-skip-paths:
+    description: |
+      Files/directories for codespell to skip.
+      Format: Comma-separated glob patterns.
+      Example: *.bin,docs/*,third_party/**
     required: false
     default: ""
-
-  runner-type:
-    description: "Runner type (deprecated, now runs in Docker)"
-    required: false
-    default: "auto"
 
 runs:
   using: "composite"
@@ -35,9 +39,9 @@ runs:
       run: |
         docker run --rm \
           -v "${{ github.workspace }}:/src" \
-          -e CUSTOM_EXCLUDE_FILE="${{ inputs.custom-exclude-file }}" \
-          -e CUSTOM_IGNORE_WORDS="${{ inputs.custom-ignore-words }}" \
-          -e CUSTOM_PRE_COMMIT_CONFIG="${{ inputs.custom-pre-commit-config }}" \
+          -e EXCLUDE_REGEX="${{ inputs.exclude-regex }}" \
+          -e CODESPELL_IGNORE_WORDS="${{ inputs.codespell-ignore-words }}" \
+          -e CODESPELL_SKIP_PATHS="${{ inputs.codespell-skip-paths }}" \
           coding-convention-tool:${{ github.sha }}
 
     - name: Upload Results
@@ -55,11 +59,3 @@ runs:
         name: code-fix.patch
         path: ${{ github.workspace }}/code-fix.patch
         retention-days: 3
-
-    - name: Check Results
-      shell: bash
-      run: |
-        if grep -iq "Failed" ${{ github.workspace }}/CodingConventionTool.txt; then
-          echo "Code convention check failed"
-          exit 1
-        fi

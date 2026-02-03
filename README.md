@@ -2,11 +2,12 @@
 
 Docker-based code formatting and static analysis. Identical checks in CI and locally.
 
-## Features
-- **Uncrustify v0.64** - Formatting ([Silabs Style](https://github.com/SiliconLabsSoftware/agreements-and-guidelines/blob/main/coding_standard.md))
-- **Clang-Tidy** - Naming conventions & common errors
-- **Codespell** - Spell checking
-- **Patch** - Generates patch for automated corrections
+Enforces [Silicon Labs coding standard](https://github.com/SiliconLabsSoftware/agreements-and-guidelines/blob/main/coding_standard.md) using:
+- **Formatting** - Uncrustify, trailing whitespace, EOF newlines
+- **Linting** - Clang-tidy naming conventions
+- **Spelling** - Codespell
+
+Outputs: `CodingConventionTool.txt` (report), `code-fix.patch` (auto-fix diff)
 
 ## How It Works
 
@@ -34,12 +35,10 @@ This composite action uses Docker to isolate tool dependencies from your reposit
 - name: Code Convention Check
   uses: SiliconLabsSoftware/devs-coding-convention-tool@main
   with:
-    custom-ignore-words: ""       # Optional
-    custom-exclude-file: ""       # Optional
-    custom-pre-commit-config: ""  # Optional
+    exclude-regex: ""           # Optional: regex pattern to exclude paths from all checks
+    codespell-ignore-words: ""  # Optional: comma-separated words for codespell to ignore
+    codespell-skip-paths: ""    # Optional: comma-separated glob patterns for codespell to skip
 ```
-
-**Outputs:** `CodingConventionTool.txt` (report), `code-fix.patch` (diff)
 
 ### Local Docker
 
@@ -57,9 +56,9 @@ docker run --rm -v "$(pwd):/src" convention-tool
 ```bash
 docker run --rm \
     -v "$(pwd):/src" \
-    -e CUSTOM_IGNORE_WORDS=".github/formatting_config/ignore-words.txt" \
-    -e CUSTOM_EXCLUDE_FILE=".github/formatting_config/exclude-file.txt" \
-    -e CUSTOM_PRE_COMMIT_CONFIG=".github/formatting_config/.pre-commit-config.yaml" \
+    -e EXCLUDE_REGEX=".*\/generated\/.*|.*\.pb\.c" \
+    -e CODESPELL_IGNORE_WORDS="hsi,aci,pullrequest" \
+    -e CODESPELL_SKIP_PATHS="docs/*,third_party/**" \
     convention-tool
 ```
 
@@ -69,10 +68,37 @@ Files modified in-place. Review: `git diff`
 
 Default rules embedded at build time:
 
-| Tool           | Config Path                       | Customization                              |
-| -------------- | --------------------------------- | ------------------------------------------ |
-| **Uncrustify** | `tools/uncrustify/uncrustify.cfg` | Override via `custom-pre-commit-config`    |
-| **Clang-Tidy** | `tools/.clang-tidy`               | Override via `custom-pre-commit-config`    |
-| **Codespell**  | `tools/.codespell/`               | Override via `custom-ignore-words/exclude` |
+| Tool           | Config Path                       | Notes              |
+| -------------- | --------------------------------- | ------------------ |
+| **Uncrustify** | `tools/uncrustify/uncrustify.cfg` | Company standard   |
+| **Clang-Tidy** | `tools/.clang-tidy`               | Naming conventions |
+| **Codespell**  | `tools/.codespell/`               | Spell checking     |
 
-Use `custom-pre-commit-config` to provide your own `.pre-commit-config.yaml` for full control.
+### Inputs
+
+| Input                    | Description                      | Format                 | Example                        |
+| ------------------------ | -------------------------------- | ---------------------- | ------------------------------ |
+| `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated) | `.*\/generated\/.*\|.*\.pb\.c` |
+| `codespell-ignore-words` | Words codespell should ignore    | Comma-separated        | `hsi,aci,pullrequest`          |
+| `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs  | `docs/*,third_party/**`        |
+
+## Reference
+
+### Container Filesystem
+
+Config files use absolute `/action/` paths because they resolve inside the Docker container:
+
+```
+Container
+├── /action/                        # Config files (baked into image at build)
+│   ├── .pre-commit-config.yaml
+│   └── tools/
+│       ├── .clang-tidy
+│       ├── .codespell/
+│       └── uncrustify/
+│
+└── /src/                           # Your repository (mounted at runtime)
+    ├── (your source files)
+    ├── CodingConventionTool.txt    # Generated report
+    └── code-fix.patch              # Generated patch
+```

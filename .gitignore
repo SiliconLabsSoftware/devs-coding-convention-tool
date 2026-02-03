@@ -1,0 +1,6 @@
+# Pre-commit cache (created when running locally with HOME=/src)
+.cache/
+
+# Output files from convention checks
+CodingConventionTool.txt
+code-fix.patch

@@ -4,48 +4,34 @@ set -e
 SW_REPO_DIR="/src"
 ACTION_REPO_DIR="/action"
 
-# Set cache directories for pre-commit (non-root user needs writable location)
-export HOME="$SW_REPO_DIR"
 export XDG_CACHE_HOME="$SW_REPO_DIR/.cache"
 
 cd "$SW_REPO_DIR" || exit 1
 
-git config --system --add safe.directory "$SW_REPO_DIR" 2>/dev/null || \
-git config --add safe.directory "$SW_REPO_DIR"
+git config --global --add safe.directory "$SW_REPO_DIR"
 
 echo "=== Configuration Status ==="
-echo "CUSTOM_EXCLUDE_FILE: ${CUSTOM_EXCLUDE_FILE:-<not set>}"
-echo "CUSTOM_IGNORE_WORDS: ${CUSTOM_IGNORE_WORDS:-<not set>}"
-echo "CUSTOM_PRE_COMMIT_CONFIG: ${CUSTOM_PRE_COMMIT_CONFIG:-<not set>}"
+echo "EXCLUDE_REGEX: ${EXCLUDE_REGEX:-<not set>}"
+echo "CODESPELL_IGNORE_WORDS: ${CODESPELL_IGNORE_WORDS:-<not set>}"
+echo "CODESPELL_SKIP_PATHS: ${CODESPELL_SKIP_PATHS:-<not set>}"
 echo "==========================="
 
-# Handle custom configuration
-
-if [ -n "$CUSTOM_PRE_COMMIT_CONFIG" ]; then
-    if [ -f "$SW_REPO_DIR/$CUSTOM_PRE_COMMIT_CONFIG" ]; then
-        echo "Applying custom pre-commit config: $CUSTOM_PRE_COMMIT_CONFIG"
-        cp "$SW_REPO_DIR/$CUSTOM_PRE_COMMIT_CONFIG" "$ACTION_REPO_DIR/.pre-commit-config.yaml"
-    else
-        echo "Warning: Custom pre-commit config not found: $CUSTOM_PRE_COMMIT_CONFIG"
-    fi
+# Inject exclude-regex into pre-commit config
+if [ -n "$EXCLUDE_REGEX" ]; then
+    echo "Appending exclude pattern: $EXCLUDE_REGEX"
+    sed -i "s|^exclude: '\\(.*\\)'|exclude: '\\1|${EXCLUDE_REGEX}'|" "$ACTION_REPO_DIR/.pre-commit-config.yaml"
 fi
 
-if [ -n "$CUSTOM_EXCLUDE_FILE" ]; then
-    if [ -f "$SW_REPO_DIR/$CUSTOM_EXCLUDE_FILE" ]; then
-        echo "Applying custom exclude file: $CUSTOM_EXCLUDE_FILE"
-        cp "$SW_REPO_DIR/$CUSTOM_EXCLUDE_FILE" "$ACTION_REPO_DIR/tools/.codespell/exclude-file.txt"
-    else
-        echo "Warning: Custom exclude file not found: $CUSTOM_EXCLUDE_FILE"
-    fi
+# Inject ignore-words into codespell ignore list
+if [ -n "$CODESPELL_IGNORE_WORDS" ]; then
+    echo "Adding codespell ignore words: $CODESPELL_IGNORE_WORDS"
+    echo "$CODESPELL_IGNORE_WORDS" | tr ',' '\n' >> "$ACTION_REPO_DIR/tools/.codespell/ignore-words.txt"
 fi
 
-if [ -n "$CUSTOM_IGNORE_WORDS" ]; then
-    if [ -f "$SW_REPO_DIR/$CUSTOM_IGNORE_WORDS" ]; then
-        echo "Applying custom ignore words: $CUSTOM_IGNORE_WORDS"
-        cp "$SW_REPO_DIR/$CUSTOM_IGNORE_WORDS" "$ACTION_REPO_DIR/tools/.codespell/ignore-words.txt"
-    else
-        echo "Warning: Custom ignore words file not found: $CUSTOM_IGNORE_WORDS"
-    fi
+# Inject skip-paths into codespell config
+if [ -n "$CODESPELL_SKIP_PATHS" ]; then
+    echo "Adding codespell skip paths: $CODESPELL_SKIP_PATHS"
+    sed -i "s|^skip = \\(.*\\)|skip = \\1,${CODESPELL_SKIP_PATHS}|" "$ACTION_REPO_DIR/tools/.codespell/.codespellrc"
 fi
 
 echo "Installing pre-commit hooks..."

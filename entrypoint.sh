@@ -19,7 +19,9 @@ echo "==========================="
 # Inject exclude-regex into pre-commit config
 if [ -n "$EXCLUDE_REGEX" ]; then
     echo "Appending exclude pattern: $EXCLUDE_REGEX"
-    sed -i "s|^exclude: '\\(.*\\)'|exclude: '\\1|${EXCLUDE_REGEX}'|" "$ACTION_REPO_DIR/.pre-commit-config.yaml"
+    # Escape special sed characters in the regex pattern
+    ESCAPED_REGEX=$(printf '%s\n' "$EXCLUDE_REGEX" | sed 's/[&/\]/\\&/g')
+    sed -i "s/^exclude: '\\(.*\\)'/exclude: '\\1|${ESCAPED_REGEX}'/" "$ACTION_REPO_DIR/.pre-commit-config.yaml"
 fi
 
 # Inject ignore-words into codespell ignore list
@@ -31,7 +33,9 @@ fi
 # Inject skip-paths into codespell config
 if [ -n "$CODESPELL_SKIP_PATHS" ]; then
     echo "Adding codespell skip paths: $CODESPELL_SKIP_PATHS"
-    sed -i "s|^skip = \\(.*\\)|skip = \\1,${CODESPELL_SKIP_PATHS}|" "$ACTION_REPO_DIR/tools/.codespell/.codespellrc"
+    # Escape special sed characters in the skip paths
+    ESCAPED_PATHS=$(printf '%s\n' "$CODESPELL_SKIP_PATHS" | sed 's/[&/\]/\\&/g')
+    sed -i "s/^skip = \\(.*\\)/skip = \\1,${ESCAPED_PATHS}/" "$ACTION_REPO_DIR/tools/.codespell/.codespellrc"
 fi
 
 echo "Installing pre-commit hooks..."

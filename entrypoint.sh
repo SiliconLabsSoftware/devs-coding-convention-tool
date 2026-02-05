@@ -4,7 +4,7 @@ set -e
 SW_REPO_DIR="/src"
 ACTION_REPO_DIR="/action"
 
-export XDG_CACHE_HOME="$SW_REPO_DIR/.cache"
+export XDG_CACHE_HOME="/tmp/.pre-commit-cache"
 
 cd "$SW_REPO_DIR" || exit 1
 
@@ -16,22 +16,13 @@ echo "CODESPELL_IGNORE_WORDS: ${CODESPELL_IGNORE_WORDS:-<not set>}"
 echo "CODESPELL_SKIP_PATHS: ${CODESPELL_SKIP_PATHS:-<not set>}"
 echo "==========================="
 
-# Inject exclude-regex into pre-commit config
-if [ -n "$EXCLUDE_REGEX" ]; then
-    echo "Appending exclude pattern: $EXCLUDE_REGEX"
-    sed -i "s|^exclude: '\\(.*\\)'|exclude: '\\1|${EXCLUDE_REGEX}'|" "$ACTION_REPO_DIR/.pre-commit-config.yaml"
-fi
-
-# Inject ignore-words into codespell ignore list
-if [ -n "$CODESPELL_IGNORE_WORDS" ]; then
-    echo "Adding codespell ignore words: $CODESPELL_IGNORE_WORDS"
-    echo "$CODESPELL_IGNORE_WORDS" | tr ',' '\n' >> "$ACTION_REPO_DIR/tools/.codespell/ignore-words.txt"
-fi
-
-# Inject skip-paths into codespell config
-if [ -n "$CODESPELL_SKIP_PATHS" ]; then
-    echo "Adding codespell skip paths: $CODESPELL_SKIP_PATHS"
-    sed -i "s|^skip = \\(.*\\)|skip = \\1,${CODESPELL_SKIP_PATHS}|" "$ACTION_REPO_DIR/tools/.codespell/.codespellrc"
+if [ -n "$EXCLUDE_REGEX" ] || [ -n "$CODESPELL_IGNORE_WORDS" ] || [ -n "$CODESPELL_SKIP_PATHS" ]; then
+    SCRIPT_PATH="$ACTION_REPO_DIR/handle_custom_inputs.py"
+    if [ ! -s "$SCRIPT_PATH" ]; then
+        echo "ERROR: missing or empty handler script: $SCRIPT_PATH" >&2
+        exit 1
+    fi
+    python3 "$SCRIPT_PATH"
 fi
 
 echo "Installing pre-commit hooks..."

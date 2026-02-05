@@ -36,6 +36,9 @@ set -e
 
 git diff > code-fix.patch || echo "No changes to patch."
 
+#remove pre-commit .cache folder to not pollute the sw repo git status
+rm -rf .cache 
+
 if [ "$PC_EXIT" -ne 0 ]; then
     echo "Pre-commit failed with exit code $PC_EXIT"
     exit "$PC_EXIT"

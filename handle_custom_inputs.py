@@ -11,21 +11,17 @@ from pathlib import Path
 
 ACTION_REPO_DIR = Path(os.environ.get("ACTION_REPO_DIR", "/action"))
 PRE_COMMIT_CONFIG_PATH = ACTION_REPO_DIR / ".pre-commit-config.yaml"
-CS_IGNORE_WORDS_PATH = ACTION_REPO_DIR / "tools/.codespell/ignore-words.txt"
-CS_CONFIG_PATH = ACTION_REPO_DIR / "tools/.codespell/.codespellrc"
-
-
-def _require_file(path: Path, label: str) -> None:
-    if not path.exists():
-        print(f"ERROR: {label} missing: {path}", file=sys.stderr)
-        sys.exit(1)
-    if path.stat().st_size == 0:
-        print(f"ERROR: {label} is empty: {path}", file=sys.stderr)
-        sys.exit(1)
+CODESPELL_IGNORE_WORDS_PATH = ACTION_REPO_DIR / "tools/.codespell/ignore-words.txt"
+CODESPELL_CONFIG_PATH = ACTION_REPO_DIR / "tools/.codespell/.codespellrc"
 
 
 def _append_exclude_regex(config_path: Path, exclude_regex: str) -> None:
-    _require_file(config_path, "pre-commit config")
+    if not config_path.exists():
+        print(f"ERROR: pre-commit config missing: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    if config_path.stat().st_size == 0:
+        print(f"ERROR: pre-commit config is empty: {config_path}", file=sys.stderr)
+        sys.exit(1)
     lines = config_path.read_text().splitlines()
     out = []
     updated = False
@@ -44,7 +40,9 @@ def _append_exclude_regex(config_path: Path, exclude_regex: str) -> None:
 
 
 def _append_codespell_ignore_words(ignore_words_path: Path, ignore_words: str) -> None:
-    _require_file(ignore_words_path, "codespell ignore words file")
+    if not ignore_words_path.exists():
+        print(f"ERROR: codespell ignore words file missing: {ignore_words_path}", file=sys.stderr)
+        sys.exit(1)
     words = [w.strip() for w in ignore_words.split(",") if w.strip()]
     if not words:
         return
@@ -54,7 +52,12 @@ def _append_codespell_ignore_words(ignore_words_path: Path, ignore_words: str) -
 
 
 def _append_codespell_skip_paths(config_path: Path, skip_paths: str) -> None:
-    _require_file(config_path, "codespell config")
+    if not config_path.exists():
+        print(f"ERROR: codespell config missing: {config_path}", file=sys.stderr)
+        sys.exit(1)
+    if config_path.stat().st_size == 0:
+        print(f"ERROR: codespell config is empty: {config_path}", file=sys.stderr)
+        sys.exit(1)
     additions = [p.strip() for p in skip_paths.split(",") if p.strip()]
     if not additions:
         return
@@ -81,10 +84,10 @@ def main() -> int:
         return 1
 
     exclude_regex = os.environ.get("EXCLUDE_REGEX", "")
-    ignore_words = os.environ.get("CODESPELL_IGNORE_WORDS", "")
-    skip_paths = os.environ.get("CODESPELL_SKIP_PATHS", "")
+    codespell_ignore_words = os.environ.get("CODESPELL_IGNORE_WORDS", "")
+    codespell_skip_paths = os.environ.get("CODESPELL_SKIP_PATHS", "")
 
-    if not any([exclude_regex, ignore_words, skip_paths]):
+    if not any([exclude_regex, codespell_ignore_words, codespell_skip_paths]):
         return 0
 
     if exclude_regex:
@@ -96,18 +99,17 @@ def main() -> int:
                 print(f" - {entry}")
         _append_exclude_regex(PRE_COMMIT_CONFIG_PATH, exclude_regex)
 
-    if ignore_words:
-        print(f"Adding codespell ignore words: {ignore_words}")
+    if codespell_ignore_words:
+        print(f"Adding codespell ignore words: {codespell_ignore_words}")
         _append_codespell_ignore_words(
-            CS_IGNORE_WORDS_PATH, ignore_words
+            CODESPELL_IGNORE_WORDS_PATH, codespell_ignore_words
         )
 
-    if skip_paths:
-        print(f"Adding codespell skip paths: {skip_paths}")
+    if codespell_skip_paths:
+        print(f"Adding codespell skip paths: {codespell_skip_paths}")
         _append_codespell_skip_paths(
-            CS_CONFIG_PATH, skip_paths
+            CODESPELL_CONFIG_PATH, codespell_skip_paths
         )
-
     return 0
 
 if __name__ == "__main__":

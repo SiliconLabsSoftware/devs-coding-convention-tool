@@ -21,8 +21,8 @@ inputs:
   codespell-skip-paths:
     description: |
       Files/directories for codespell to skip.
-      Format: Comma-separated glob patterns.
-      Example: *.bin,docs/*,third_party/**
+      Format: Comma-separated glob patterns (fnmatch-style), not regex. Avoid using **.
+      Example: *.bin,docs/*,third_party/*
     required: false
     default: ""
 

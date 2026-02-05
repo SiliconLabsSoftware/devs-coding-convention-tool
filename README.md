@@ -45,11 +45,12 @@ This composite action uses Docker to isolate tool dependencies from your reposit
 **Quick Start** (from your repo root):
 ```bash
 # Build image
-git clone https://github.com/SiliconLabsSoftware/devs-coding-convention-tool.git /tmp/convention-tool
-docker build -t convention-tool /tmp/convention-tool
+mkdir -p ./tmp
+git clone https://github.com/SiliconLabsSoftware/devs-coding-convention-tool.git ./tmp/devs-coding-convention-tool
+docker build -t devs-coding-convention-tool ./tmp/devs-coding-convention-tool
 
 # Run checks
-docker run --rm -v "$(pwd):/src" convention-tool
+docker run --rm -v "$(pwd):/src" devs-coding-convention-tool
 ```
 
 **With Custom Config:**
@@ -58,8 +59,8 @@ docker run --rm \
     -v "$(pwd):/src" \
     -e EXCLUDE_REGEX=".*\/generated\/.*|.*\.pb\.c" \
     -e CODESPELL_IGNORE_WORDS="hsi,aci,pullrequest" \
-    -e CODESPELL_SKIP_PATHS="docs/*,third_party/**" \
-    convention-tool
+    -e CODESPELL_SKIP_PATHS="docs/*,third_party/*" \
+    devs-coding-convention-tool
 ```
 
 Files modified in-place. Review: `git diff`
@@ -80,7 +81,9 @@ Default rules embedded at build time:
 | ------------------------ | -------------------------------- | ---------------------- | ------------------------------ |
 | `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated) | `.*\/generated\/.*\|.*\.pb\.c` |
 | `codespell-ignore-words` | Words codespell should ignore    | Comma-separated        | `hsi,aci,pullrequest`          |
-| `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs  | `docs/*,third_party/**`        |
+| `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs (fnmatch-style), avoid `**` | `docs/*,third_party/*` |
+
+Custom inputs are applied at runtime inside the container by `handle_custom_inputs.py`.
 
 ## Reference
 

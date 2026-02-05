@@ -25,8 +25,9 @@ RUN git clone -b uncrustify-0.64 --single-branch https://github.com/uncrustify/u
 WORKDIR /action
 COPY .pre-commit-config.yaml /action/
 COPY tools /action/tools
+COPY handle_custom_inputs.py /action/handle_custom_inputs.py
 COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh /action/handle_custom_inputs.py
 
 ENTRYPOINT ["/entrypoint.sh"]

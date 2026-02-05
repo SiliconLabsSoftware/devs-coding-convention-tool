@@ -4,7 +4,7 @@ set -e
 SW_REPO_DIR="/src"
 ACTION_REPO_DIR="/action"
 
-export XDG_CACHE_HOME="$SW_REPO_DIR/.cache"
+export XDG_CACHE_HOME="/tmp/.pre-commit-cache"
 
 cd "$SW_REPO_DIR" || exit 1
 
@@ -35,9 +35,6 @@ PC_EXIT=${PIPESTATUS[0]}
 set -e
 
 git diff > code-fix.patch || echo "No changes to patch."
-
-#remove pre-commit .cache folder to not pollute the sw repo git status
-rm -rf .cache 
 
 if [ "$PC_EXIT" -ne 0 ]; then
     echo "Pre-commit failed with exit code $PC_EXIT"

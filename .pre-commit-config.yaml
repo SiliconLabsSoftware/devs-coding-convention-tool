@@ -1,4 +1,6 @@
-exclude: '.*\/build\/.*|.*\/gecko_sdk.*/.*|.*\/autogen\/.*|.*simplicity.*/.*|.*\/config\/.*|.*\.slcp|.*\.slps|.*\.mak'
+# 00-Check-Code-Convention.yml is excluded by default.
+# If you want to use a different filename, exclude that filename explicitly in the action inputs.
+exclude: '.*\/build\/.*|.*\/gecko_sdk.*/.*|.*\/autogen\/.*|.*simplicity.*/.*|.*\/config\/.*|^\.github\/workflows\/00-Check-Code-Convention\.yml$|.*\.slcp|.*\.slps|.*\.mak'
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

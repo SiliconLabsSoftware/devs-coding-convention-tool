@@ -77,11 +77,16 @@ Default rules embedded at build time:
 
 ### Inputs
 
-| Input                    | Description                      | Format                 | Example                        |
-| ------------------------ | -------------------------------- | ---------------------- | ------------------------------ |
-| `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated) | `.*\/generated\/.*\|.*\.pb\.c` |
-| `codespell-ignore-words` | Words codespell should ignore    | Comma-separated        | `hsi,aci,pullrequest`          |
-| `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs (fnmatch-style), avoid `**` | `docs/*,third_party/*` |
+| Input                    | Description                      | Format                                            | Example                        |
+| ------------------------ | -------------------------------- | ------------------------------------------------- | ------------------------------ |
+| `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated)                            | `.*\/generated\/.*\|.*\.pb\.c` |
+| `codespell-ignore-words` | Words codespell should ignore    | Comma-separated                                   | `hsi,aci,pullrequest`          |
+| `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs (fnmatch-style), avoid `**` | `docs/*,third_party/*`         |
+
+#### Note:
+The 00-Check-Code-Convention.yml workflow is excluded by default. It shall contain the additional ignored words.
+Which would trigger the action to fail on that workflow file. If you want to use a different workflow filename,  
+you must exclude that filename explicitly.
 
 Custom inputs are applied at runtime inside the container by `handle_custom_inputs.py`.
 

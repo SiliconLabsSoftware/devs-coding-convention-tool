@@ -21,7 +21,6 @@ repos:
           [
             -c,
             /action/tools/uncrustify/uncrustify.cfg,
-            -lC,
             --no-backup,
             --replace,
           ]

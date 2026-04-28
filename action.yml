@@ -47,6 +47,7 @@ runs:
     - name: Upload Results
       uses: actions/upload-artifact@v4
       if: always()
+      continue-on-error: true
       with:
         name: CodingConventionResult
         path: ${{ github.workspace }}/CodingConventionTool.txt
@@ -55,6 +56,7 @@ runs:
     - name: Upload Patch
       uses: actions/upload-artifact@v4
       if: always()
+      continue-on-error: true
       with:
         name: code-fix.patch
         path: ${{ github.workspace }}/code-fix.patch

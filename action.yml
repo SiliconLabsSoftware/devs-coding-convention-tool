@@ -60,4 +60,5 @@ runs:
       with:
         name: code-fix.patch
         path: ${{ github.workspace }}/code-fix.patch
+        if-no-files-found: ignore
         retention-days: 3

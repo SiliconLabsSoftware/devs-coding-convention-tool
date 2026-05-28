@@ -34,7 +34,12 @@ pre-commit run --config /action/.pre-commit-config.yaml --all-files 2>&1 | tee C
 PC_EXIT=${PIPESTATUS[0]}
 set -e
 
-git diff > code-fix.patch || echo "No changes to patch."
+if ! git diff --quiet; then
+    git diff > code-fix.patch
+    echo "Generated code-fix.patch from modified files."
+else
+    echo "No modified files detected; skipping code-fix.patch creation."
+fi
 
 if [ "$PC_EXIT" -ne 0 ]; then
     echo "Pre-commit failed with exit code $PC_EXIT"

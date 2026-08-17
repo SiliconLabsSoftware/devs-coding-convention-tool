@@ -8,11 +8,11 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
         args: ["--markdown-linebreak-ext=md"]
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+  - repo: https://github.com/AndrasZiegler/codespell-silabs
+    rev: 31de321acee254d75eee05ac5e8e17aa2f9dee1a
     hooks:
       - id: codespell
-        args: [-w, --config, /action/tools/.codespell/.codespellrc]
+        args: [--config, /action/tools/.codespell/.codespellrc]
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:

@@ -21,9 +21,10 @@ exclude: |
   | .*\.mak
   | .*\.pintool
   | .*\.code-workspace
-  |
-  # cmake_gcc: everything except CMakeLists.txt
-  (?:^|.*/)cmake_gcc/(?!CMakeLists\.txt$).+
+  | .*\.silabsExtContext
+  | .*\.vscode.conf
+  | .*/cmake_gcc/.+(?<!/CMakeLists\.txt)$
+  | ^cmake_gcc/.+(?<!/CMakeLists\.txt)$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

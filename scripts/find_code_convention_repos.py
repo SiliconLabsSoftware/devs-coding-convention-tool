@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Find org repos that use devs-coding-convention-tool and have a passing last run."""
+"""Find org repos that use devs-coding-convention-tool and have a passing last run.
+
+The output file is a ready-to-use GitHub Actions matrix payload:
+
+    {"include": [{"repo_index": 0, "full_name": ..., "ref": ...}, ...]}
+
+so a workflow can feed it straight into `strategy.matrix` via `fromJson`.
+"""
 
 from __future__ import annotations
 
@@ -58,7 +65,8 @@ def fetch_last_run(org: str, repo_name: str) -> tuple[dict | None, str | None]:
                 ".workflow_runs[0] | "
                 "if . == null then null else "
                 "{status, conclusion, url: .html_url, created_at, head_branch, "
-                "event, run_number} end"
+                "head_sha, event, run_number, "
+                "pull_request_number: (.pull_requests[0].number // null)} end"
             ),
         ]
     )
@@ -208,6 +216,105 @@ def parse_workflow(content: str) -> dict[str, str] | None:
     }
 
 
+def fetch_pull_request(org: str, repo_name: str, pr_number: int) -> tuple[dict | None, str | None]:
+    full_name = f"{org}/{repo_name}"
+    result = run_gh(
+        [
+            "api",
+            f"repos/{full_name}/pulls/{pr_number}",
+            "--jq",
+            (
+                "{merged_at, merge_commit_sha, head_sha: .head.sha, number}"
+            ),
+        ]
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "api error"
+        return None, detail
+
+    raw = result.stdout.strip()
+    if not raw or raw == "null":
+        return None, "pull request not found"
+    return json.loads(raw), None
+
+
+def fetch_pull_request_for_commit(
+    org: str, repo_name: str, head_sha: str
+) -> tuple[dict | None, str | None]:
+    full_name = f"{org}/{repo_name}"
+    result = run_gh(
+        [
+            "api",
+            f"repos/{full_name}/commits/{head_sha}/pulls",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "--jq",
+            (
+                ".[0] | if . == null then null else "
+                "{merged_at, merge_commit_sha, head_sha: .head.sha, number} end"
+            ),
+        ]
+    )
+    if result.returncode != 0:
+        detail = result.stderr.strip() or result.stdout.strip() or "api error"
+        return None, detail
+
+    raw = result.stdout.strip()
+    if not raw or raw == "null":
+        return None, "no pull request found for commit"
+    return json.loads(raw), None
+
+
+def commit_exists(org: str, repo_name: str, sha: str) -> bool:
+    full_name = f"{org}/{repo_name}"
+    result = run_gh(["api", f"repos/{full_name}/commits/{sha}", "--jq", ".sha"])
+    return result.returncode == 0 and bool(result.stdout.strip())
+
+
+def resolve_ref(org: str, repo_name: str, last_run: dict) -> tuple[str | None, str | None]:
+    """Pick a stable commit for regression checkout.
+
+    For pull_request runs, use merge_commit_sha when the PR was merged
+    (merge, squash, and rebase merges all populate it). Otherwise use the
+    source-branch commit from the successful run. Non-PR runs fall back to
+    head_sha. Returns (ref, skip_reason).
+    """
+    head_sha = last_run.get("head_sha") or ""
+    event = last_run.get("event") or ""
+
+    if event == "pull_request":
+        pr_number = last_run.get("pull_request_number")
+        if pr_number is not None:
+            pull_request, api_error = fetch_pull_request(org, repo_name, pr_number)
+        elif head_sha:
+            pull_request, api_error = fetch_pull_request_for_commit(
+                org, repo_name, head_sha
+            )
+        else:
+            return None, "pull_request run has no pull request or head_sha"
+
+        if api_error is not None:
+            return None, f"could not resolve pull request ({api_error})"
+        if pull_request is None:
+            return None, "could not resolve pull request"
+
+        if pull_request.get("merged_at") and pull_request.get("merge_commit_sha"):
+            ref = pull_request["merge_commit_sha"]
+        elif head_sha:
+            ref = head_sha
+        else:
+            return None, "pull request not merged and run has no head_sha"
+    else:
+        ref = head_sha
+        if not ref:
+            return None, "non-pull_request run has no head_sha"
+
+    if not commit_exists(org, repo_name, ref):
+        return None, f"commit {ref} does not exist"
+
+    return ref, None
+
+
 def check_repo(org: str, repo_name: str) -> dict | None:
     content = fetch_workflow(org, repo_name)
     if content is None or not USES_PATTERN.search(content):
@@ -233,10 +340,16 @@ def check_repo(org: str, repo_name: str) -> dict | None:
         print(f"skip {full_name}: last run not successful ({reason})", file=sys.stderr)
         return None
 
+    ref, skip_reason = resolve_ref(org, repo_name, last_run)
+    if not ref:
+        print(f"skip {full_name}: {skip_reason}", file=sys.stderr)
+        return None
+
     print(full_name)
     return {
         "full_name": full_name,
         "repo": repo_name,
+        "ref": ref,
         **inputs,
         "last_run": last_run,
     }
@@ -280,18 +393,19 @@ def main() -> None:
                 repos.append(record)
 
     repos.sort(key=lambda item: item["full_name"])
+    include = [{"repo_index": index, **repo} for index, repo in enumerate(repos)]
 
     with open(args.output, "w", encoding="utf-8") as fp:
-        json.dump({"repos": repos}, fp, indent=2)
+        json.dump({"include": include}, fp, indent=2)
         fp.write("\n")
 
     elapsed = int(time.monotonic() - started)
-    if not repos:
+    if not include:
         print(f"Found 0 repos with a successful last run ({elapsed}s)")
         return
 
     print(
-        f"Found {len(repos)} repos with a successful last run "
+        f"Found {len(include)} repos with a successful last run "
         f"({elapsed}s, written to {args.output})"
     )
 

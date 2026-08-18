@@ -14,20 +14,86 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
-  regression:
+  prepare:
     runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      repo_count: ${{ steps.matrix.outputs.repo_count }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
-      - name: Find consumer repositories
-        id: find
+      - name: Discover consumer repositories
+        id: matrix
         env:
           GH_TOKEN: ${{ secrets.REGRESSION_GH_TOKEN || github.token }}
         run: |
           python3 scripts/find_code_convention_repos.py repos.json
-          echo "repo_count=$(jq '.repos | length' repos.json)" >> "$GITHUB_OUTPUT"
+          repo_count="$(jq '.include | length' repos.json)"
+          if [ "$repo_count" -eq 0 ]; then
+            echo "::error::no consumer repository with a successful last run was found"
+            exit 1
+          fi
+          {
+            echo "matrix=$(jq -c . repos.json)"
+            echo "repo_count=${repo_count}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload discovered repository set
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: regression-repos
+          path: repos.json
+          if-no-files-found: warn
+
+  regression:
+    needs: prepare
+    name: regression (${{ matrix.repo }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout consumer repository
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.full_name }}
+          ref: ${{ matrix.ref }}
+          token: ${{ secrets.REGRESSION_GH_TOKEN || github.token }}
+
+      - name: Checkout action under test
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: action-tool
+
+      - name: Run code convention check
+        uses: ./action-tool
+        with:
+          exclude-regex: ${{ matrix.exclude_regex }}
+          codespell-ignore-words: ${{ matrix.codespell_ignore_words }}
+          codespell-skip-paths: ${{ matrix.codespell_skip_paths }}
+
+  summary:
+    needs: [prepare, regression]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Report regression result
+        env:
+          REPO_COUNT: ${{ needs.prepare.outputs.repo_count }}
+          REGRESSION_RESULT: ${{ needs.regression.result }}
+        run: |
+          {
+            echo "### Regression"
+            echo ""
+            echo "- consumer repositories: ${REPO_COUNT}"
+            echo "- result: ${REGRESSION_RESULT}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          [ "$REGRESSION_RESULT" = "success" ]

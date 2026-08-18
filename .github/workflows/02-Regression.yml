@@ -1,4 +1,4 @@
-ame: 02-Regression
+name: 02-Regression
 
 on:
   pull_request:
@@ -11,3 +11,23 @@ on:
         description: "Also workflow_dispatch 00-Check-Code-Convention in each consumer repo"
         type: boolean
         default: false
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Find consumer repositories
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.REGRESSION_GH_TOKEN || github.token }}
+        run: |
+          python3 scripts/find_code_convention_repos.py repos.json
+          echo "repo_count=$(jq '.repos | length' repos.json)" >> "$GITHUB_OUTPUT"

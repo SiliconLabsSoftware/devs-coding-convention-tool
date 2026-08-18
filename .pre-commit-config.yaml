@@ -1,6 +1,29 @@
 # 00-Check-Code-Convention.yml is excluded by default.
 # If you want to use a different filename, exclude that filename explicitly in the action inputs.
-exclude: '.*\/build\/.*|.*\/gecko_sdk.*/.*|.*\/autogen\/.*|.*simplicity.*/.*|.*\/config\/.*|^\.github\/workflows\/00-Check-Code-Convention\.yml$|.*\.slcp|.*\.slps|.*\.mak'
+# exclude-regex action input appends a "| pattern" line to this multiline block at runtime.
+exclude: |
+  (?x)
+  # Build output
+  .*/build/.*
+  |
+  # Silicon Labs SDK / generated / IDE paths
+  .*/gecko_sdk.*/.*
+  | .*/autogen/.*
+  | .*simplicity.*/.*
+  | .*/config/.*
+  |
+  # CI workflow (self-check)
+  ^\.github/workflows/00-Check-Code-Convention\.yml$
+  |
+  # Project metadata
+  .*\.slcp
+  | .*\.slps
+  | .*\.mak
+  | .*\.pintool
+  | .*\.code-workspace
+  |
+  # cmake_gcc: everything except CMakeLists.txt
+  (?:^|.*/)cmake_gcc/(?!CMakeLists\.txt$).+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

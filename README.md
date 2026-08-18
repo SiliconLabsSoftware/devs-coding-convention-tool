@@ -57,7 +57,7 @@ docker run --rm -v "$(pwd):/src" devs-coding-convention-tool
 ```bash
 docker run --rm \
     -v "$(pwd):/src" \
-    -e EXCLUDE_REGEX=".*\/generated\/.*|.*\.pb\.c" \
+    -e EXCLUDE_REGEX=".*/generated/.*|.*\.pb\.c" \
     -e CODESPELL_IGNORE_WORDS="hsi,aci,pullrequest" \
     -e CODESPELL_SKIP_PATHS="docs/*,third_party/*" \
     devs-coding-convention-tool
@@ -79,9 +79,13 @@ Default rules embedded at build time:
 
 | Input                    | Description                      | Format                                            | Example                        |
 | ------------------------ | -------------------------------- | ------------------------------------------------- | ------------------------------ |
-| `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated)                            | `.*\/generated\/.*\|.*\.pb\.c` |
+| `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated)                            | `.*/generated/.*\|.*\.pb\.c` |
 | `codespell-ignore-words` | Words codespell should ignore    | Comma-separated                                   | `hsi,aci,pullrequest`          |
 | `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs (fnmatch-style), avoid `**` | `docs/*,third_party/*`         |
+
+`exclude-regex` is appended as a `| pattern` line to the multiline `exclude: |` block in `.pre-commit-config.yaml`.
+The block uses Python verbose mode (`(?x)`); an unescaped `#` starts a regex comment, so escape it as `\#` if your pattern needs a literal hash.
+If you fork this action and change `.pre-commit-config.yaml`, keep `exclude` as a multiline `exclude: |` block — single-line `exclude: '...'` is not supported.
 
 #### Note:
 The 00-Check-Code-Convention.yml workflow is excluded by default. It shall contain the additional ignored words.

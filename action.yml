@@ -5,8 +5,10 @@ inputs:
   exclude-regex:
     description: |
       Regex pattern to exclude paths from all checks.
-      Format: Python regex, use | for OR.
-      Example: .*\/generated\/.*|.*\.pb\.c
+      Format: Python regex, use | for OR. Appended as a new "| pattern" line to the
+      multiline exclude: | block in .pre-commit-config.yaml (requires (?x) verbose format).
+      Example: .*/generated/.*|.*\.pb\.c
+      Note: unescaped # starts a comment in the exclude block; escape as \# if needed.
     required: false
     default: ""
 

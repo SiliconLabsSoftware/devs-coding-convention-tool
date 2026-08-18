@@ -1,0 +1,13 @@
+ame: 02-Regression
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      trigger_consumer_workflows:
+        description: "Also workflow_dispatch 00-Check-Code-Convention in each consumer repo"
+        type: boolean
+        default: false

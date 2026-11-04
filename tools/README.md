@@ -1,2 +1,2 @@
-# Silicon Labs Code convetion check tool
+# Silicon Labs Code convention check tool
 For more details check the [README](./../README.md)

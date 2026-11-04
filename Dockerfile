@@ -28,6 +28,8 @@ COPY tools /action/tools
 COPY handle_custom_inputs.py /action/handle_custom_inputs.py
 COPY entrypoint.sh /entrypoint.sh
 
-RUN chmod +x /entrypoint.sh /action/handle_custom_inputs.py
+RUN mkdir -p /root/.config/ruff && \
+    cp /action/tools/ruff.toml /root/.config/ruff/ruff.toml && \
+    chmod +x /entrypoint.sh /action/handle_custom_inputs.py
 
 ENTRYPOINT ["/entrypoint.sh"]

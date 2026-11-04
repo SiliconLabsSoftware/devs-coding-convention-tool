@@ -41,7 +41,10 @@ def _append_exclude_regex(config_path: Path, exclude_regex: str) -> None:
 
 def _append_codespell_ignore_words(ignore_words_path: Path, ignore_words: str) -> None:
     if not ignore_words_path.exists():
-        print(f"ERROR: codespell ignore words file missing: {ignore_words_path}", file=sys.stderr)
+        print(
+            f"ERROR: codespell ignore words file missing: {ignore_words_path}",
+            file=sys.stderr,
+        )
         sys.exit(1)
     words = [w.strip() for w in ignore_words.split(",") if w.strip()]
     if not words:
@@ -80,7 +83,10 @@ def _append_codespell_skip_paths(config_path: Path, skip_paths: str) -> None:
 
 def main() -> int:
     if not ACTION_REPO_DIR.exists() or not ACTION_REPO_DIR.is_dir():
-        print(f"ERROR: action repo dir missing or not a directory: {ACTION_REPO_DIR}", file=sys.stderr)
+        print(
+            f"ERROR: action repo dir missing or not a directory: {ACTION_REPO_DIR}",
+            file=sys.stderr,
+        )
         return 1
 
     exclude_regex = os.environ.get("EXCLUDE_REGEX", "")
@@ -107,10 +113,9 @@ def main() -> int:
 
     if codespell_skip_paths:
         print(f"Adding codespell skip paths: {codespell_skip_paths}")
-        _append_codespell_skip_paths(
-            CODESPELL_CONFIG_PATH, codespell_skip_paths
-        )
+        _append_codespell_skip_paths(CODESPELL_CONFIG_PATH, codespell_skip_paths)
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

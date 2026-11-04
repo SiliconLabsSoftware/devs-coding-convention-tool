@@ -1,5 +1,5 @@
 name: "Code Convention Check"
-description: "Enforce Silicon Labs C/C++ coding standards (formatting, naming, spelling)"
+description: "Enforce Silicon Labs C/C++ and Python coding standards (formatting, linting, spelling)"
 
 inputs:
   exclude-regex:

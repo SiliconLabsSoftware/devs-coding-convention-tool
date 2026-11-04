@@ -3,8 +3,8 @@
 Docker-based code formatting and static analysis. Identical checks in CI and locally.
 
 Enforces [Silicon Labs coding standard](https://github.com/SiliconLabsSoftware/agreements-and-guidelines/blob/main/coding_standard.md) using:
-- **Formatting** - Uncrustify, trailing whitespace, EOF newlines
-- **Linting** - Clang-tidy naming conventions
+- **Formatting** - Uncrustify for C/C++, Ruff for Python, trailing whitespace, EOF newlines
+- **Linting** - Clang-tidy naming conventions for C/C++, Ruff for Python
 - **Spelling** - Codespell
 
 Outputs: `CodingConventionTool.txt` (report), `code-fix.patch` (auto-fix diff)
@@ -15,7 +15,7 @@ This composite action uses Docker to isolate tool dependencies from your reposit
 
 1. **Your workflow** checks out your code to `${{ github.workspace }}`
 2. **Action downloads** config files automatically from this repo
-3. **Docker image built** with pre-commit, uncrustify, clang-tidy, codespell
+3. **Docker image built** with pre-commit, uncrustify, clang-tidy, codespell, and Ruff
 4. **Container mounts** your repo as `/src` (read-write volume)
 5. **Pre-commit runs** checks against your code, modifying files in-place
 6. **Results saved** to your workspace: `CodingConventionTool.txt`, `code-fix.patch`
@@ -58,7 +58,7 @@ docker run --rm -v "$(pwd):/src" devs-coding-convention-tool
 docker run --rm \
     -v "$(pwd):/src" \
     -e EXCLUDE_REGEX=".*\/generated\/.*|.*\.pb\.c" \
-    -e CODESPELL_IGNORE_WORDS="hsi,aci,pullrequest" \
+    -e CODESPELL_IGNORE_WORDS="his,acpi,pullrequest" \
     -e CODESPELL_SKIP_PATHS="docs/*,third_party/*" \
     devs-coding-convention-tool
 ```
@@ -74,13 +74,47 @@ Default rules embedded at build time:
 | **Uncrustify** | `tools/uncrustify/uncrustify.cfg` | Company standard   |
 | **Clang-Tidy** | `tools/.clang-tidy`               | Naming conventions |
 | **Codespell**  | `tools/.codespell/`               | Spell checking     |
+| **Ruff**       | `tools/ruff.toml`, copied to `/root/.config/ruff/ruff.toml` in the image | Python linting and formatting |
+
+### Ruff configuration
+
+The tool provides a `ruff.toml` by default in the container for the most useful set of lints and formatting rules. However, you can create your own project-specific configuration either in a `ruff.toml`, or the project's own `pyproject.toml`. These files will override the container default. Copy the relevant settings from `tools/ruff.toml` and adapt them for the project. See the following configurations as an example:
+
+```toml
+# ruff.toml
+line-length = 88
+indent-width = 2
+
+[lint]
+extend-select = ["I"]
+
+[format]
+quote-style = "single"
+```
+
+Or put them into a `pyproject.toml`, under `[tool.ruff]`:
+
+```toml
+# pyproject.toml
+[tool.ruff]
+line-length = 88
+indent-width = 2
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.format]
+quote-style = "single"
+```
+
+For more information on configurations and rules, see [ruff docs](https://docs.astral.sh/ruff/).
 
 ### Inputs
 
 | Input                    | Description                      | Format                                            | Example                        |
 | ------------------------ | -------------------------------- | ------------------------------------------------- | ------------------------------ |
 | `exclude-regex`          | Paths to exclude from all checks | Regex (pipe-separated)                            | `.*\/generated\/.*\|.*\.pb\.c` |
-| `codespell-ignore-words` | Words codespell should ignore    | Comma-separated                                   | `hsi,aci,pullrequest`          |
+| `codespell-ignore-words` | Words codespell should ignore    | Comma-separated                                   | `his,acpi,pullrequest`          |
 | `codespell-skip-paths`   | Files codespell should skip      | Comma-separated globs (fnmatch-style), avoid `**` | `docs/*,third_party/*`         |
 
 #### Note:
@@ -98,11 +132,14 @@ Config files use absolute `/action/` paths because they resolve inside the Docke
 
 ```
 Container
+├── /root/.config/ruff/
+│   └── ruff.toml                    # Default Ruff configuration
 ├── /action/                        # Config files (baked into image at build)
 │   ├── .pre-commit-config.yaml
 │   └── tools/
 │       ├── .clang-tidy
 │       ├── .codespell/
+│       ├── ruff.toml               # Shared defaults; copied to Ruff's container user config
 │       └── uncrustify/
 │
 └── /src/                           # Your repository (mounted at runtime)

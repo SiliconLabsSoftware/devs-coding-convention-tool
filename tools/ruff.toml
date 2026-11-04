@@ -1,0 +1,12 @@
+# Shared Ruff defaults for Python projects checked by the coding convention tool.
+# Ruff's built-in defaults enable E4, E7, E9, and F. Add isort rules as the
+# shared import-ordering convention.
+line-length = 88
+indent-width = 4
+
+[lint]
+extend-select = ["I"]
+
+[format]
+# Preserve existing single- and double-quote choices across projects.
+quote-style = "preserve"

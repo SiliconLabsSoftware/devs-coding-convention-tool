@@ -15,28 +15,32 @@ CODESPELL_IGNORE_WORDS_PATH = ACTION_REPO_DIR / "tools/.codespell/ignore-words.t
 CODESPELL_CONFIG_PATH = ACTION_REPO_DIR / "tools/.codespell/.codespellrc"
 
 
+def _read_nonempty_lines(path: Path, label: str) -> list[str]:
+    if not path.exists():
+        print(f"ERROR: {label} missing: {path}", file=sys.stderr)
+        sys.exit(1)
+    if path.stat().st_size == 0:
+        print(f"ERROR: {label} is empty: {path}", file=sys.stderr)
+        sys.exit(1)
+    return path.read_text().splitlines()
+
+
 def _append_exclude_regex(config_path: Path, exclude_regex: str) -> None:
-    if not config_path.exists():
-        print(f"ERROR: pre-commit config missing: {config_path}", file=sys.stderr)
-        sys.exit(1)
-    if config_path.stat().st_size == 0:
-        print(f"ERROR: pre-commit config is empty: {config_path}", file=sys.stderr)
-        sys.exit(1)
-    lines = config_path.read_text().splitlines()
-    out = []
-    updated = False
-    for line in lines:
-        if not updated and line.startswith("exclude: "):
-            existing = line[len("exclude: ") :].strip().strip("'\"")
-            combined = f"{existing}|{exclude_regex}" if existing else exclude_regex
-            out.append(f"exclude: '{combined}'")
-            updated = True
-        else:
-            out.append(line)
-    if not updated:
-        print("ERROR: no exclude line found in pre-commit config", file=sys.stderr)
-        sys.exit(1)
-    config_path.write_text("\n".join(out) + "\n")
+    lines = _read_nonempty_lines(config_path, "pre-commit config")
+    for index, line in enumerate(lines):
+        if not line.startswith("exclude:") or not line.removeprefix("exclude:").strip().startswith("|"):
+            continue
+        block_end = index + 1
+        while block_end < len(lines) and (lines[block_end].startswith("  ") or lines[block_end] == ""):
+            block_end += 1
+        lines.insert(block_end, f"  | {exclude_regex}")
+        config_path.write_text("\n".join(lines) + "\n")
+        return
+    print(
+        "ERROR: multiline exclude block (exclude: |) not found in pre-commit config",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 
 def _append_codespell_ignore_words(ignore_words_path: Path, ignore_words: str) -> None:
@@ -52,16 +56,10 @@ def _append_codespell_ignore_words(ignore_words_path: Path, ignore_words: str) -
 
 
 def _append_codespell_skip_paths(config_path: Path, skip_paths: str) -> None:
-    if not config_path.exists():
-        print(f"ERROR: codespell config missing: {config_path}", file=sys.stderr)
-        sys.exit(1)
-    if config_path.stat().st_size == 0:
-        print(f"ERROR: codespell config is empty: {config_path}", file=sys.stderr)
-        sys.exit(1)
     additions = [p.strip() for p in skip_paths.split(",") if p.strip()]
     if not additions:
         return
-    lines = config_path.read_text().splitlines()
+    lines = _read_nonempty_lines(config_path, "codespell config")
     out = []
     updated = False
     for line in lines:

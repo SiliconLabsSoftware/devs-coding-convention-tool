@@ -3,3 +3,5 @@
 # Output files from convention checks
 CodingConventionTool.txt
 code-fix.patch
+# Regression matrix, regenerated on every run
+repos.json
